@@ -3,26 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MG 5 Facelift - Passenger Suite</title>
-  
-  <!-- FontAwesome for Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Google Fonts: Cairo -->
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <title>MG 5 Facelift | VIP Passenger OS</title>
 
-  <!-- Model Viewer for 3D Car -->
-  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.1.1/model-viewer.min.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Font: Cairo -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- html2canvas for screenshot generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
     :root {
-      --bg-dark: #0a0a0c;
-      --card-bg: rgba(22, 22, 27, 0.75);
-      --accent-color: #d12027; /* MG Racing Red */
-      --accent-glow: rgba(209, 32, 39, 0.4);
-      --text-main: #f5f5f7;
-      --text-muted: #a1a1a6;
-      --border-color: rgba(255, 255, 255, 0.08);
+      --bg-main: #f4f5f8;
+      --card-bg: #ffffff;
+      --text-dark: #111116;
+      --text-muted: #6e6e73;
+      --mg-red: #d12027;
+      --mg-red-soft: rgba(209, 32, 39, 0.08);
+      --mg-red-glow: rgba(209, 32, 39, 0.2);
+      --border-color: #e5e5ea;
+      --ambient-color: rgba(209, 32, 39, 0.15);
+      --shadow-light: 0 10px 30px rgba(0, 0, 0, 0.05);
+      --shadow-card: 0 15px 35px rgba(0, 0, 0, 0.07);
     }
 
     * {
@@ -30,344 +32,836 @@
       margin: 0;
       padding: 0;
       font-family: 'Cairo', sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
+      background-color: var(--bg-main);
+      color: var(--text-dark);
+      padding-bottom: 90px;
       overflow-x: hidden;
-      line-height: 1.6;
+      line-height: 1.5;
     }
 
-    /* Fixed 3D Canvas Background Viewport */
-    .viewport-3d {
-      position: fixed;
+    /* Top Branding Header */
+    .app-header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 1.5rem;
+      position: sticky;
       top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 1;
-      pointer-events: none; /* Let scroll pass through */
-    }
-
-    model-viewer {
-      width: 100%;
-      height: 100%;
-      --poster-color: transparent;
-    }
-
-    /* Scrollable Content Container */
-    .content-container {
-      position: relative;
-      z-index: 2;
-    }
-
-    section {
-      min-height: 100vh;
+      z-index: 100;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
       align-items: center;
-      padding: 4rem 1.5rem;
+      justify-content: space-between;
+      box-shadow: var(--shadow-light);
     }
 
-    /* Glassmorphic Card Style */
-    .glass-card {
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .brand-logo-badge {
+      background: var(--mg-red);
+      color: #fff;
+      font-weight: 900;
+      font-size: 1.1rem;
+      padding: 0.2rem 0.8rem;
+      border-radius: 8px;
+      letter-spacing: 1px;
+    }
+
+    .brand-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text-dark);
+    }
+
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #34c759;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 8px #34c759;
+    }
+
+    /* Container */
+    .container {
+      max-width: 700px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+
+    /* Views System (Multi-Page simulation) */
+    .app-view {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .app-view.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards Layout */
+    .card {
       background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--border-color);
       border-radius: 24px;
-      padding: 2.5rem;
-      width: 100%;
-      max-width: 650px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-      margin: 1.5rem 0;
+      padding: 1.8rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-card);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
 
-    /* Hero Section */
-    .hero-title {
-      font-size: 3rem;
-      font-weight: 900;
-      letter-spacing: -1px;
-      text-transform: uppercase;
-      text-align: center;
-      background: linear-gradient(135deg, #ffffff 0%, #a1a1a6 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .hero-subtitle {
-      color: var(--accent-color);
-      font-size: 1.2rem;
-      font-weight: 700;
-      text-align: center;
-      margin-top: 0.5rem;
-      letter-spacing: 2px;
-    }
-
-    .scroll-indicator {
+    .card::before {
+      content: '';
       position: absolute;
-      bottom: 2rem;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--ambient-color);
+    }
+
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--text-dark);
+      margin-bottom: 0.4rem;
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .card-title i {
+      color: var(--mg-red);
+    }
+
+    .card-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1.2rem;
+    }
+
+    /* Status Bar Grid */
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.8rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .status-item {
+      background: #f8f9fc;
+      border: 1px solid var(--border-color);
+      padding: 1rem 0.5rem;
+      border-radius: 16px;
+      text-align: center;
+    }
+
+    .status-item i {
+      font-size: 1.3rem;
+      color: var(--mg-red);
+      margin-bottom: 0.3rem;
+    }
+
+    .status-val {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text-dark);
+    }
+
+    .status-lbl {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Express Buttons Grid */
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.8rem;
+    }
+
+    .express-btn {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text-dark);
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    .express-btn:active {
+      transform: scale(0.97);
+      background: var(--mg-red-soft);
+      border-color: var(--mg-red);
+    }
+
+    .express-btn i {
+      font-size: 1.2rem;
+      color: var(--mg-red);
+      width: 25px;
+      text-align: center;
+    }
+
+    /* Climate Control Custom UI */
+    .temp-display-box {
+      background: linear-gradient(135deg, #111116 0%, #22222a 100%);
+      color: #fff;
+      border-radius: 20px;
+      padding: 1.8rem;
+      text-align: center;
+      margin-bottom: 1.2rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    .temp-degree {
+      font-size: 3.5rem;
+      font-weight: 900;
+      line-height: 1;
+      margin: 0.5rem 0;
+      color: #fff;
+    }
+
+    .temp-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .circle-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-size: 1.4rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s;
+    }
+
+    .circle-btn:active {
+      background: var(--mg-red);
+      transform: scale(0.9);
+    }
+
+    .air-mode-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+
+    .air-mode-card {
+      background: #f8f9fc;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.8rem;
+      text-align: center;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 700;
+      transition: 0.2s;
+    }
+
+    .air-mode-card.active {
+      background: var(--mg-red);
+      color: #fff;
+      border-color: var(--mg-red);
+    }
+
+    /* Ticket Box Result */
+    #ticketCard {
+      display: none;
+      background: #ffffff;
+      border: 2px dashed var(--mg-red);
+      border-radius: 20px;
+      padding: 1.5rem;
+      margin-top: 1.2rem;
+      text-align: center;
+    }
+
+    /* Bluetooth Copy Box */
+    .bt-card {
+      background: #f8f9fc;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .btn-action {
+      background: var(--mg-red);
+      color: #fff;
+      border: none;
+      padding: 0.7rem 1.3rem;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: 0.2s;
+      display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      animation: bounce 2s infinite;
     }
 
-    @keyframes bounce {
-      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-      40% { transform: translateY(-10px); }
-      60% { transform: translateY(-5px); }
+    .btn-action:active {
+      transform: scale(0.96);
+      opacity: 0.9;
     }
 
-    /* Section Headers */
-    .section-header {
+    /* Ambient Lighting Selector */
+    .color-picker-grid {
       display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      border-bottom: 2px solid var(--accent-color);
-      padding-bottom: 0.5rem;
-    }
-
-    .section-header i {
-      color: var(--accent-color);
-      font-size: 1.5rem;
-    }
-
-    .section-header h2 {
-      font-size: 1.5rem;
-      font-weight: 800;
-    }
-
-    /* Bluetooth Box */
-    .bt-box {
-      background: linear-gradient(135deg, rgba(209, 32, 39, 0.15) 0%, rgba(10, 10, 12, 0.4) 100%);
-      border: 1px solid var(--accent-glow);
-      border-radius: 16px;
-      padding: 1.25rem;
-      display: flex;
-      align-items: center;
+      gap: 0.8rem;
       justify-content: space-between;
       margin-top: 1rem;
     }
 
-    .bt-info {
+    .color-dot {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 3px solid #fff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      transition: transform 0.2s;
+    }
+
+    .color-dot:active {
+      transform: scale(1.15);
+    }
+
+    /* VIP Pass Result */
+    .pass-card {
+      background: linear-gradient(135deg, #ffffff 0%, #f4f5f8 100%);
+      border: 2px solid var(--mg-red);
+      border-radius: 20px;
+      padding: 1.5rem;
+      margin-top: 1rem;
+      box-shadow: var(--shadow-card);
+    }
+
+    .pass-header {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 0.8rem;
+      margin-bottom: 1rem;
     }
 
-    .bt-info i {
-      font-size: 2rem;
-      color: #0071e3;
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #ffffff;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-around;
+      padding: 0.6rem 0;
+      z-index: 200;
+      box-shadow: 0 -5px 25px rgba(0,0,0,0.05);
     }
 
-    .bt-name {
-      font-weight: 800;
-      font-size: 1.2rem;
-      color: #fff;
-    }
-
-    /* Rules List */
-    .rules-list {
-      list-style: none;
+    .nav-item {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
-    }
-
-    .rules-list li {
-      display: flex;
       align-items: center;
-      gap: 1rem;
-      font-size: 1.05rem;
-    }
-
-    .rules-list i {
-      color: var(--accent-color);
-      width: 24px;
-      text-align: center;
-    }
-
-    /* Spec Grid */
-    .spec-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-
-    .spec-item {
-      background: rgba(255, 255, 255, 0.03);
-      padding: 1rem;
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-      text-align: center;
-    }
-
-    .spec-value {
-      font-size: 1.2rem;
-      font-weight: 800;
-      color: #fff;
-    }
-
-    .spec-label {
-      font-size: 0.85rem;
+      gap: 0.2rem;
       color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      width: 25%;
+      transition: color 0.2s;
     }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-      .hero-title { font-size: 2.2rem; }
-      .glass-card { padding: 1.5rem; }
-      .spec-grid { grid-template-columns: 1fr; }
+    .nav-item i {
+      font-size: 1.2rem;
+    }
+
+    .nav-item.active {
+      color: var(--mg-red);
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      top: 4.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: #111116;
+      color: #fff;
+      padding: 0.8rem 1.8rem;
+      border-radius: 50px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 300;
+      text-align: center;
+      min-width: 250px;
+    }
+
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Input Field Styling */
+    .custom-input {
+      width: 100%;
+      padding: 0.9rem 1.2rem;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+      outline: none;
+      background: #f8f9fc;
+    }
+
+    .custom-input:focus {
+      border-color: var(--mg-red);
+      background: #fff;
+    }
+
+    @media (max-width: 480px) {
+      .btn-grid { grid-template-columns: 1fr; }
+      .status-grid { grid-template-columns: repeat(3, 1fr); }
+      .circle-btn { width: 44px; height: 44px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- 3D Viewport with White MG Style Sedan -->
-  <div class="viewport-3d">
-    <model-viewer 
-      id="mgCar"
-      src="https://modelviewer.dev/shared-assets/models/glTF-Sample-Assets/2.0/ToyCar/glTF-Binary/ToyCar.glb" 
-      alt="MG 5 Facelift White"
-      shadow-intensity="2"
-      environment-image="neutral"
-      exposure="1.2"
-      interaction-prompt="none"
-      camera-orbit="0deg 75deg 105%"
-      field-of-view="30deg">
-    </model-viewer>
-  </div>
+  <!-- Toast Pop-up -->
+  <div id="toast">تم تنفيذ الإجراء بنجاح</div>
 
-  <!-- Main Scrollable Overlay -->
-  <div class="content-container">
-
-    <!-- Section 1: Hero -->
-    <section>
-      <div class="glass-card" style="text-align: center;">
-        <h1 class="hero-title">MG 5 FACELIFT</h1>
-        <p class="hero-subtitle">أهلاً بك في الرحلة • VIP CABIN</p>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand-logo">
+      <span class="brand-logo-badge">MG</span>
+      <div>
+        <div class="brand-title">MG 5 Facelift</div>
+        <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700;">Passenger Experience OS</div>
       </div>
-      <div class="scroll-indicator">
-        <span>انزل للأسفل واستمتع بالدوران</span>
-        <i class="fa-solid fa-chevron-down"></i>
-      </div>
-    </section>
+    </div>
+    <div class="header-status">
+      <span class="status-dot"></span>
+      <span>الكابينة جاهزة</span>
+    </div>
+  </header>
 
-    <!-- Section 2: Audio & Bluetooth -->
-    <section>
-      <div class="glass-card">
-        <div class="section-header">
-          <i class="fa-solid fa-compact-disc"></i>
-          <h2>النظام الصوتي والبلوتوث</h2>
+  <!-- Main Container -->
+  <div class="container">
+
+    <!-- ==================== VIEW 1: DASHBOARD (HOME) ==================== -->
+    <div id="viewHome" class="app-view active">
+      
+      <!-- Hero Status Card -->
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-car-rear"></i> مرحباً بك في الكابينة</div>
+        <div class="card-subtitle">شاشة التحكم والخدمات الخاصة بركاب سيارة MG 5 الفيس ليفت</div>
+
+        <div class="status-grid">
+          <div class="status-item">
+            <i class="fa-solid fa-snowflake"></i>
+            <div class="status-val" id="dashTempDisplay">20°C</div>
+            <div class="status-lbl">التكييف</div>
+          </div>
+          <div class="status-item">
+            <i class="fa-solid fa-battery-three-quarters"></i>
+            <div class="status-val" id="batteryDisplay">--%</div>
+            <div class="status-lbl">بطاريتك</div>
+          </div>
+          <div class="status-item">
+            <i class="fa-solid fa-shield-halved"></i>
+            <div class="status-val">VIP</div>
+            <div class="status-lbl">الوضع</div>
+          </div>
         </div>
-        <p style="color: var(--text-muted);">عشان تشغل أغانيك وتستمتع بالخط، شبك على البلوتوث الخاص بالسيارة:</p>
-        
-        <div class="bt-box">
-          <div class="bt-info">
-            <i class="fa-brands fa-bluetooth-b"></i>
-            <div>
-              <div class="bt-name">MG5_MEDIA</div>
-              <div style="font-size: 0.8rem; color: var(--text-muted);">جاهز لللاقتران دائماً</div>
+      </div>
+
+      <!-- Quick Passenger Requests -->
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-bolt"></i> طلبات سريعة بنقرة واحدة</div>
+        <div class="card-subtitle">اضغط الطلب ليصل إشعار فوري للكابتن إبراهيم</div>
+
+        <div class="btn-grid">
+          <div class="express-btn" onclick="triggerAlert('🧊 طلب الراكب: ماء بارد')">
+            <i class="fa-solid fa-bottle-water"></i>
+            <span>أبغى موية باردة</span>
+          </div>
+          <div class="express-btn" onclick="triggerAlert('🔌 طلب الراكب: كيبل شاحن للجوال')">
+            <i class="fa-solid fa-plug"></i>
+            <span>حتاج كيبل شاحن</span>
+          </div>
+          <div class="express-btn" onclick="triggerAlert('🔇 طلب الراكب: تخفيض الصوت قليلاً')">
+            <i class="fa-solid fa-volume-xmark"></i>
+            <span>خفّض الصوت شوي</span>
+          </div>
+          <div class="express-btn" onclick="triggerAlert('🛑 طلب الراكب: التوقف عند أقرب محطة')">
+            <i class="fa-solid fa-gas-pump"></i>
+            <span>توقف عند محطة</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vehicle Highlight Info -->
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-circle-info"></i> عن MG 5 الفيس ليفت الجديدة</div>
+        <div class="card-subtitle">أهم المواصفات والمميزات التي تتمتع بها السيارة الآن</div>
+
+        <div style="font-size: 0.9rem; color: var(--text-dark); display: flex; flex-direction: column; gap: 0.8rem;">
+          <div style="display: flex; align-items: center; gap: 0.8rem; background: #f8f9fc; padding: 0.8rem; border-radius: 12px;">
+            <i class="fa-solid fa-gauge-high" style="color: var(--mg-red); font-size: 1.2rem;"></i>
+            <div><strong>تصميم ديناميكي:</strong> شبك أمامي جديد كلياً مع إضاءة LED رياضية حادة.</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.8rem; background: #f8f9fc; padding: 0.8rem; border-radius: 12px;">
+            <i class="fa-solid fa-tv" style="color: var(--mg-red); font-size: 1.2rem;"></i>
+            <div><strong>شاشة ترفيه 10.1 بوصة:</strong> تدعم Apple CarPlay و Android Auto بأعلى دقة.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== VIEW 2: CLIMATE & CONTROLS ==================== -->
+    <div id="viewClimate" class="app-view">
+      
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-temperature-arrow-down"></i> نظام التحكم بالتكييف</div>
+        <div class="card-subtitle">حدد الدرجة المناسبة لك واستخرج بطاقة الطلب للكابتن</div>
+
+        <div class="temp-display-box">
+          <div style="font-size: 0.85rem; color: #a1a1a6; font-weight: 700;">درجة حرارة الكابينة المطلوبة</div>
+          <div class="temp-degree"><span id="targetTemp">20</span>°C</div>
+          
+          <div class="temp-controls">
+            <button class="circle-btn" onclick="adjustTemp(-1)"><i class="fa-solid fa-minus"></i></button>
+            <span style="font-weight: 800; font-size: 0.9rem;" id="tempStatusText">معتدل ومناسب</span>
+            <button class="circle-btn" onclick="adjustTemp(1)"><i class="fa-solid fa-plus"></i></button>
+          </div>
+        </div>
+
+        <div style="font-weight: 800; font-size: 0.9rem; margin-bottom: 0.5rem;">اتجاه توزيع الهواء:</div>
+        <div class="air-mode-grid">
+          <div class="air-mode-card active" onclick="setAirMode(this, 'الوجه والعلوي')"><i class="fa-solid fa-user"></i> الوجه</div>
+          <div class="air-mode-card" onclick="setAirMode(this, 'الأقدام')"><i class="fa-solid fa-shoe-prints"></i> الأقدام</div>
+          <div class="air-mode-card" onclick="setAirMode(this, 'مزدوج شاملاً الزجاج')"><i class="fa-solid fa-wind"></i> كلي</div>
+        </div>
+
+        <button class="btn-action" style="width: 100%; margin-top: 1.5rem; justify-content: center; padding: 1rem;" onclick="generateACTicket()">
+          <i class="fa-solid fa-receipt"></i> تصدير تذكرة الطلب للكابتن
+        </button>
+
+        <!-- Printable / Screenshot AC Ticket -->
+        <div id="ticketCard">
+          <div style="color: var(--mg-red); font-weight: 900; font-size: 1.1rem; margin-bottom: 0.5rem;">
+            <i class="fa-solid fa-snowflake"></i> بطاقة طلب تعديل التكييف
+          </div>
+          <div style="font-size: 0.9rem; color: var(--text-dark); margin-bottom: 1rem;">
+            يرجى ضبط التكييف على درجة <strong><span id="ticketTemp">20</span>°C</strong> بظرف اتجاه <strong><span id="ticketMode">الوجه والعلوي</span></strong>.
+          </div>
+          <div style="display: flex; gap: 0.5rem; justify-content: center;">
+            <button class="btn-action" onclick="downloadTicketImage()"><i class="fa-solid fa-camera"></i> حفظ البطاقة كصورة</button>
+            <button class="btn-action" style="background: #25d366;" onclick="sendWhatsAppAC()"><i class="fa-brands fa-whatsapp"></i> إرسال بالواتساب</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ambient Light Control Simulator -->
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-wand-magic-sparkles"></i> اختيار الإضاءة المحيطية للموقع</div>
+        <div class="card-subtitle">اختر لون الإضاءة لتغيير الهوية البصرية للبطاقات فوراً</div>
+
+        <div class="color-picker-grid">
+          <div class="color-dot" style="background: #d12027;" onclick="setAmbient('#d12027', 'أحمر سبورت MG')"></div>
+          <div class="color-dot" style="background: #0071e3;" onclick="setAmbient('#0071e3', 'أزرق سماوي هادئ')"></div>
+          <div class="color-dot" style="background: #af52de;" onclick="setAmbient('#af52de', 'بنفسجي ليل الملكي')"></div>
+          <div class="color-dot" style="background: #34c759;" onclick="setAmbient('#34c759', 'أخضر زمردي')"></div>
+          <div class="color-dot" style="background: #ff9500;" onclick="setAmbient('#ff9500', 'برتقالي كلاسيك')"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== VIEW 3: MEDIA & ENTERTAINMENT ==================== -->
+    <div id="viewMedia" class="app-view">
+      
+      <!-- Bluetooth Setup Card -->
+      <div class="card">
+        <div class="card-title"><i class="fa-brands fa-bluetooth-b"></i> الاتصال بالنظام الصوتي</div>
+        <div class="card-subtitle">اقترن ببالبلوتوث الخاص بالسيارة لتشغيل مقاطعك الصوتية</div>
+
+        <div class="bt-card">
+          <div>
+            <div style="font-weight: 800; font-size: 1.1rem;" id="btDeviceName">MG5_MEDIA_BT</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">جاهز للاقتران فوراً</div>
+          </div>
+          <button class="btn-action" onclick="copyBtName()"><i class="fa-regular fa-copy"></i> نسخ الاسم</button>
+        </div>
+      </div>
+
+      <!-- Roadtrip Minigame -->
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-gamepad"></i> تحدي أسئلة الخطوط والتسلية</div>
+        <div class="card-subtitle">تحدى نفسك أو الركاب بأسئلة سريعة أثناء الطريق</div>
+
+        <div style="background: #f8f9fc; padding: 1.2rem; border-radius: 16px; border: 1px solid var(--border-color); text-align: center;">
+          <div style="font-weight: 800; font-size: 0.95rem; margin-bottom: 0.8rem;" id="quizQuestion">
+            كم سعة محرك سيارة MG 5 الفيس ليفت الجديدة؟
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <button class="express-btn" style="justify-content: center;" onclick="answerQuiz(true)">1.5 ليتر اقتصادي وسلس</button>
+            <button class="express-btn" style="justify-content: center;" onclick="answerQuiz(false)">4.0 ليتر V8 ثمانية سرندل</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== VIEW 4: CABIN RULES & VIP PASS ==================== -->
+    <div id="viewRules" class="app-view">
+      
+      <!-- VIP Boarding Pass Generator -->
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-id-card"></i> إصدار بطاقة صعود VIP للراكب</div>
+        <div class="card-subtitle">أدخل اسمك للحصول على بطاقة تذكارية رسمية لركوب السيارة</div>
+
+        <input type="text" id="passengerNameInput" class="custom-input" placeholder="أدخل اسمك الكريم هنا...">
+        <button class="btn-action" style="width: 100%; justify-content: center;" onclick="generateVIPPass()">
+          <i class="fa-solid fa-ticket"></i> إصدار البطاقة الآن
+        </button>
+
+        <div id="vipPassResult" style="display: none;">
+          <div class="pass-card" id="passToCapture">
+            <div class="pass-header">
+              <div style="font-weight: 900; color: var(--mg-red);">MG 5 PASSENGER BOARDING PASS</div>
+              <span class="brand-logo-badge" style="font-size: 0.75rem;">VIP GUEST</span>
+            </div>
+            <div style="font-size: 0.9rem; margin-bottom: 0.5rem;">اسم الراكب: <strong id="passName">--</strong></div>
+            <div style="font-size: 0.9rem; margin-bottom: 0.5rem;">المقعد: <strong>الراكب الأمامي / VIP Cabin</strong></div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.8rem; border-top: 1px solid var(--border-color); padding-top: 0.5rem;">
+              نتمنى لك رحلة سعيدة وآمنة برفقة الكابتن إبراهيم.
             </div>
           </div>
-          <i class="fa-solid fa-signal" style="color: #34c759;"></i>
-        </div>
-
-        <div style="margin-top: 1.5rem;">
-          <h3 style="font-size: 1.1rem; margin-bottom: 0.8rem;">قواعد الموسيقى:</h3>
-          <ul class="rules-list">
-            <li><i class="fa-solid fa-circle-check"></i> ذوقك المقبول مرحب فيه دائماً.</li>
-            <li><i class="fa-solid fa-circle-xmark"></i> ممنوع التخطي المفاجئ أثناء تشغيل الأغنية.</li>
-            <li><i class="fa-solid fa-volume-high"></i> الصوت على العالي فقط داخل الخطوط السريعة.</li>
-          </ul>
+          <button class="btn-action" style="width: 100%; margin-top: 0.8rem; justify-content: center;" onclick="downloadPassImage()">
+            <i class="fa-solid fa-download"></i> حفظ بطاقة الركوب
+          </button>
         </div>
       </div>
-    </section>
 
-    <!-- Section 3: Passenger Rules -->
-    <section>
-      <div class="glass-card">
-        <div class="section-header">
-          <i class="fa-solid fa-shield-halved"></i>
-          <h2>قواعد وقوانين الركوب</h2>
-        </div>
-        <ul class="rules-list">
-          <li>
-            <i class="fa-solid fa-ban-smoking"></i>
-            <span>التدخين أو الفيب ممنوع منعاً باتاً داخل الكابينة.</span>
-          </li>
-          <li>
-            <i class="fa-solid fa-bottle-water"></i>
-            <span>المشروبات والمأكولات بحذر، الحفاظ على النظافة مسؤولية الجميع.</span>
-          </li>
-          <li>
-            <i class="fa-solid fa-couch"></i>
-            <span>الراحة مطلوبة، ضبط المقعد مسموح بما لا يضايق الراكب الخلفي.</span>
-          </li>
-          <li>
-            <i class="fa-solid fa-bell"></i>
-            <span>التنبيه قبل نزولك بفترة كافية لضمان الوقوف الآمن.</span>
-          </li>
-        </ul>
-      </div>
-    </section>
+      <!-- Rules List -->
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-shield-halved"></i> قوانين وشروط الكابينة</div>
+        <div class="card-subtitle">تعليمات بسيطة لضمان راحة وسلامة الجميع أثناء الطريق</div>
 
-    <!-- Section 4: Vehicle Specs -->
-    <section>
-      <div class="glass-card">
-        <div class="section-header">
-          <i class="fa-solid fa-car-side"></i>
-          <h2>عن MG 5 Facelift</h2>
-        </div>
-        <p style="color: var(--text-muted);">تصميم عصري رياضي بمحرك اقتصادي وأداء ممتاز للتنقلات اليومية والخطوط.</p>
-        
-        <div class="spec-grid">
-          <div class="spec-item">
-            <div class="spec-value">1.5L</div>
-            <div class="spec-label">سعة المحرك</div>
+        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+          <div style="display: flex; align-items: center; gap: 0.8rem; background: #f8f9fc; padding: 0.9rem; border-radius: 14px;">
+            <i class="fa-solid fa-ban-smoking" style="color: var(--mg-red); font-size: 1.2rem;"></i>
+            <div><strong>ممنوع التدخين / الفيب:</strong> للحفاظ على رائحة ونظافة الكابينة.</div>
           </div>
-          <div class="spec-item">
-            <div class="spec-value">CVT</div>
-            <div class="spec-label">ناقل الحركة</div>
+          <div style="display: flex; align-items: center; gap: 0.8rem; background: #f8f9fc; padding: 0.9rem; border-radius: 14px;">
+            <i class="fa-solid fa-bottle-water" style="color: var(--mg-red); font-size: 1.2rem;"></i>
+            <div><strong>المأكولات والمشروبات:</strong> مسموح بالمشروبات المغلقة والأكلات الخفيفة بحذر.</div>
           </div>
-          <div class="spec-item">
-            <div class="spec-value">LED</div>
-            <div class="spec-label">الإضاءة الأمامية</div>
-          </div>
-          <div class="spec-item">
-            <div class="spec-value">10.1"</div>
-            <div class="spec-label">شاشة الترفيه</div>
+          <div style="display: flex; align-items: center; gap: 0.8rem; background: #f8f9fc; padding: 0.9rem; border-radius: 14px;">
+            <i class="fa-solid fa-couch" style="color: var(--mg-red); font-size: 1.2rem;"></i>
+            <div><strong>تعديل المقاعد:</strong> مسموح بما لا يضايق الراكب بالمقعد الخلفي.</div>
           </div>
         </div>
       </div>
-    </section>
+
+    </div>
 
   </div>
 
-  <!-- Scroll Logic to Rotate the 3D Car -->
+  <!-- Bottom App Navigation Bar -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab('viewHome', this)">
+      <i class="fa-solid fa-house"></i>
+      <span>الرئيسية</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('viewClimate', this)">
+      <i class="fa-solid fa-snowflake"></i>
+      <span>التكييف</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('viewMedia', this)">
+      <i class="fa-solid fa-music"></i>
+      <span>الترفيه</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('viewRules', this)">
+      <i class="fa-solid fa-id-card"></i>
+      <span>البطاقة والقوانين</span>
+    </div>
+  </nav>
+
+  <!-- JavaScript Application Logic -->
   <script>
-    const carModel = document.getElementById('mgCar');
+    // 1. Toast Notification System
+    function triggerAlert(message) {
+      const toast = document.getElementById('toast');
+      toast.innerText = message;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); }, 3000);
+    }
 
-    window.addEventListener('scroll', () => {
-      // Calculate scroll percentage
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      const currentScroll = window.scrollY;
-      const scrollPercent = currentScroll / maxScroll;
-
-      // Full 360 rotation based on scroll depth + slight pitch variation
-      const degrees = scrollPercent * 360;
+    // 2. Multi-Tab System Navigation
+    function switchTab(viewId, element) {
+      document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       
-      // Update model orbital view dynamically on scroll
-      carModel.setAttribute('camera-orbit', `${degrees}deg 75deg 105%`);
-    });
+      document.getElementById(viewId).classList.add('active');
+      element.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 3. Climate Control Interactive Logic
+    let currentTemp = 20;
+    let currentAirMode = "الوجه والعلوي";
+
+    function adjustTemp(change) {
+      currentTemp += change;
+      if (currentTemp < 16) currentTemp = 16;
+      if (currentTemp > 28) currentTemp = 28;
+
+      document.getElementById('targetTemp').innerText = currentTemp;
+      document.getElementById('dashTempDisplay').innerText = currentTemp + "°C";
+
+      const status = document.getElementById('tempStatusText');
+      if (currentTemp <= 18) status.innerText = "تبريد قوي جداً ❄️";
+      else if (currentTemp <= 22) status.innerText = "معتدل ومناسب 🍃";
+      else status.innerText = "دافئ ومريح ☀️";
+    }
+
+    function setAirMode(element, mode) {
+      document.querySelectorAll('.air-mode-card').forEach(c => c.classList.remove('active'));
+      element.classList.add('active');
+      currentAirMode = mode;
+    }
+
+    function generateACTicket() {
+      document.getElementById('ticketTemp').innerText = currentTemp;
+      document.getElementById('ticketMode').innerText = currentAirMode;
+      document.getElementById('ticketCard').style.display = 'block';
+      triggerAlert('تم إنشاء بطاقة طلب التكييف بنجاح!');
+    }
+
+    function sendWhatsAppAC() {
+      const msg = `أهلاً كابتن إبراهيم، يرجى لطفاً ضبط التكييف على درجة ${currentTemp}°C باتجاه ${currentAirMode}.`;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    function downloadTicketImage() {
+      html2canvas(document.getElementById('ticketCard')).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'AC_Request_MG5.png';
+        link.href = canvas.toDataURL();
+        link.click();
+        triggerAlert('تم حفظ صورة تذكرة التكييف!');
+      });
+    }
+
+    // 4. Ambient Color System
+    function setAmbient(color, name) {
+      document.documentElement.style.setProperty('--ambient-color', color);
+      triggerAlert('تم تغيير لون الإضاءة إلى: ' + name);
+    }
+
+    // 5. Bluetooth Copy
+    function copyBtName() {
+      const name = document.getElementById('btDeviceName').innerText;
+      navigator.clipboard.writeText(name).then(() => {
+        triggerAlert('تم نسخ اسم البلوتوث!');
+      });
+    }
+
+    // 6. VIP Boarding Pass Generator
+    function generateVIPPass() {
+      const name = document.getElementById('passengerNameInput').value.trim();
+      if (!name) {
+        triggerAlert('يرجى كتابة اسمك أولاً!');
+        return;
+      }
+      document.getElementById('passName').innerText = name;
+      document.getElementById('vipPassResult').style.display = 'block';
+      triggerAlert('تم إصدار بطاقة الصعود بنجاح!');
+    }
+
+    function downloadPassImage() {
+      html2canvas(document.getElementById('passToCapture')).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'MG5_VIP_Pass.png';
+        link.href = canvas.toDataURL();
+        link.click();
+        triggerAlert('تم تحميل بطاقة الركوب VIP!');
+      });
+    }
+
+    // 7. Battery API Integration
+    if ('getBattery' in navigator) {
+      navigator.getBattery().then(battery => {
+        function updateBat() {
+          document.getElementById('batteryDisplay').innerText = Math.round(battery.level * 100) + '%';
+        }
+        updateBat();
+        battery.addEventListener('levelchange', updateBat);
+      });
+    } else {
+      document.getElementById('batteryDisplay').innerText = '95%';
+    }
+
+    // 8. Quiz Minigame
+    function answerQuiz(isCorrect) {
+      if (isCorrect) {
+        triggerAlert('إجابة صحيحة! 🎉 محرك 1.5L موفر وعملي جداً');
+      } else {
+        triggerAlert('إجابة خاطئة! حاول مرة أخرى 😄');
+      }
+    }
   </script>
 </body>
 </html>
